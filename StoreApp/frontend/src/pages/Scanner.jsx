@@ -56,7 +56,7 @@ function Scanner() {
     <div style={{ padding: '1rem', direction: 'rtl' }}>
       <h2>📷 دریافت کالا</h2>
 
-      {showScanner && <BarcodeScanner onScan={handleScan} onClose={() => setShowScanner(false)} />}
+      {showScanner && <BarcodeScanner onScan={(code) => { setBarcode(code); setShowScanner(false); setTimeout(() => handleSearch(), 100) }} onClose={() => setShowScanner(false)} />}
 
       <div style={{ background: '#f1f5f9', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>

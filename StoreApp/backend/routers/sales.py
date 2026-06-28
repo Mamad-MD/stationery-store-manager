@@ -42,7 +42,7 @@ def register_sale(data: SaleRequest, db: Session = Depends(get_db)):
             price = amount,
             note="فروش"
         )
-        log.append(log)
+        logs.append(log)
 
     for log in logs:
         db.add(log)

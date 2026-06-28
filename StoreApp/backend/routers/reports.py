@@ -25,6 +25,6 @@ def get_summary(db: Session = Depends(get_db)):
     }
 
 @router.get("/logs")
-def get_logs(db: session = Depends(get_db)):
+def get_logs(db: Session = Depends(get_db)):
     logs = db.query(Transaction).order_by(Transaction.timestamp.desc()).all()
     return logs

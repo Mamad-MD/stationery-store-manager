@@ -14,6 +14,17 @@ class ProductCreate(BaseModel):
     sell_price: float
     quantity: int = 0
 
+@router.get("/")
+def get_products(db: Session = Depends(get_db)):
+    return db.query(Product).all()
+
+@router.get("/{barcode}")
+def get_product_by_barcode(barcode: str, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.barcode == barcode).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product with barcode {} not found".format(barcode))
+    return product
+
 @router.post("/")
 def create_product(data: ProductCreate, db: Session = Depends(get_db)):
     existing = db.query(Product).filter(Product.barcode == data.barcode).first()
@@ -21,6 +32,21 @@ def create_product(data: ProductCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Product with barcode {} already exists".format(data.barcode))
     product = Product(**data.model_dump())
     db.add(product)
+    db.commit()
+    db.refresh(product)
+    return product
+
+@router.put("/{product_id}")
+def update_product(product_id: int, data: ProductCreate, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product with id {} does not exist".format(product_id))
+    product.barcode = data.barcode
+    product.name = data.name
+    product.buy_price = data.buy_price
+    product.sell_price = data.sell_price
+    if data.quantity >= 0:
+        product.quantity = data.quantity
     db.commit()
     db.refresh(product)
     return product

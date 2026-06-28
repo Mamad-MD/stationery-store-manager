@@ -21,8 +21,8 @@ function Reports() {
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
           {[
             { label: 'تعداد محصولات', value: summary.total_products, color: '#3b82f6' },
-            { label: 'ارزش انبار (خرید)', value: summary.inventory_buy_value.toLocaleString() + ' ت', color: '#8b5cf6' },
-            { label: 'ارزش انبار (فروش)', value: summary.inventory_sell_value.toLocaleString() + ' ت', color: '#f59e0b' },
+            { label: 'ارزش انبار (خرید)', value: summary.total_buy_value.toLocaleString() + ' ت', color: '#8b5cf6' },
+            { label: 'ارزش انبار (فروش)', value: summary.total_sell_value.toLocaleString() + ' ت', color: '#f59e0b' },
             { label: 'کل فروش', value: summary.total_sales.toLocaleString() + ' ت', color: '#16a34a' },
           ].map(card => (
             <div key={card.label} style={{ background: card.color, color: 'white', padding: '1rem 2rem', borderRadius: '8px', minWidth: '180px' }}>
