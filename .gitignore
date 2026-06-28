@@ -1,39 +1,43 @@
-1.0.txt
-treeofdirectory.txt
-
 # Sensitive
+.env
 *.pem
 *.key
-.env
 
-# python
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
+.Python
 
-# virtual env
+# Virtual environments
 .venv/
 venv/
+backend/venv/
+backend/.venv/
+
+# Node
 node_modules/
+frontend/node_modules/
+
+# Build
 dist/
 build/
+frontend/dist/
+frontend/build/
 
-# database
+# Database
 *.db
+*.sqlite
+*.sqlite3
 
-# node
-node_modules/
-
-# env
-.env
-
-# ide
+# IDE
 .idea/
 .vscode/
 
-# build
-dist/
-build/
-
-# logs
+# Logs
 *.log
+
+# Local generated files
+1.0.txt
+treeofdirectory.txt
