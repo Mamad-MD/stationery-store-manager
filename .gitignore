@@ -1,0 +1,28 @@
+# python
+__pycache__/
+*.pyc
+*.pyo
+
+# virtual env
+.venv/
+venv/
+
+# database
+*.db
+
+# node
+node_modules/
+
+# env
+.env
+
+# ide
+.idea/
+.vscode/
+
+# build
+dist/
+build/
+
+# logs
+*.log
