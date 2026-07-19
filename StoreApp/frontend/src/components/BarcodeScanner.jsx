@@ -101,17 +101,35 @@ function BarcodeScanner({ onScan, onClose }) {
             device.label.toLowerCase().includes('camera') &&
             !device.label.toLowerCase().includes('front')
           )
-        ) || videoInputDevices[videoInputDevices.length - 1];
+        );
 
-        if (backCamera) {
+        let selectedCamera = null;
+
+        if(backCameras.length > 0) {
+          selectedCamera = backCameras.find(device =>
+            device.label.toLowerCase().includes('camera2 0') ||
+            device.label.toLowerCase().includes('camera 0') ||
+            device.label.toLowerCase().includes('lens 0')
+          );
+
+          if(!selectedCamera) {
+            const standardCameras = backCameras.filter(device =>
+              !device.label.toLowerCase().includes('ultrawide') &&
+              !device.label.toLowerCase().includes('ultra') &&
+              !device.label.toLowerCase().includes('macro')
+            );
+            selectedCamera = standardCameras[0] || backCamera[0];
+          }
+        }
+        if (selectedCamera) {
           const constraints = {
             video: {
-              deviceId: { exact: backCamera.deviceId },
+              deviceId: { exact: selectedCamera.deviceId },
               facingMode: { ideal: 'environment' },
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
               frameRate: { ideal: 30 },
-              focusMode: { ideal: 'continuous' },
+              advanced: [{ focusMode: 'continuous' }] 
             },
           };
 
@@ -157,7 +175,7 @@ function BarcodeScanner({ onScan, onClose }) {
             applyFocusMode();
           }, 700);
         } else {
-          setError('دوربین عقبی پیدا نشد. لطفا یک دوربین دیگر را انتخاب کنید یا دسترسی را بررسی کنید.');
+          setError('دوربین مناسب پیدا نشد. لطفا یک دوربین دیگر را انتخاب کنید یا دسترسی را بررسی کنید.');
           onClose();
         }
       } catch (e) {
