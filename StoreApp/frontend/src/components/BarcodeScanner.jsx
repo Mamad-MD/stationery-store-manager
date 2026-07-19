@@ -13,24 +13,17 @@ function BarcodeScanner({ onScan, onClose }) {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
-
       const audioCtx = new AudioContext();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
-
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-
       oscillator.type = 'sine';
       oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
       gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
-
       oscillator.start();
       oscillator.stop(audioCtx.currentTime + 0.12);
-
-      oscillator.onended = () => {
-        audioCtx.close();
-      };
+      oscillator.onended = () => audioCtx.close();
     } catch (e) {
       console.warn('Beep failed:', e);
     }
@@ -40,28 +33,19 @@ function BarcodeScanner({ onScan, onClose }) {
     try {
       const video = videoRef.current;
       const stream = video?.srcObject;
-
       if (!stream) return;
-
       const videoTrack = stream.getVideoTracks?.()[0];
       if (!videoTrack) return;
-
       const capabilities = videoTrack.getCapabilities?.();
       const constraints = {};
-
       if (capabilities?.focusMode?.includes('continuous')) {
         constraints.advanced = [{ focusMode: 'continuous' }];
       } else if (capabilities?.focusMode?.includes('single-shot')) {
         constraints.advanced = [{ focusMode: 'single-shot' }];
       }
-
       if (capabilities?.torch) {
-        constraints.advanced = [
-          ...(constraints.advanced || []),
-          { torch: false }
-        ];
+        constraints.advanced = [...(constraints.advanced || []), { torch: false }];
       }
-
       if (constraints.advanced?.length) {
         await videoTrack.applyConstraints(constraints);
       }
@@ -72,16 +56,10 @@ function BarcodeScanner({ onScan, onClose }) {
 
   useEffect(() => {
     const hints = new Map();
-
     const formats = [
-      BarcodeFormat.QR_CODE,
-      BarcodeFormat.EAN_13,
-      BarcodeFormat.EAN_8,
-      BarcodeFormat.CODE_128,
-      BarcodeFormat.CODE_39,
-      BarcodeFormat.UPC_A,
+      BarcodeFormat.QR_CODE, BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
+      BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.UPC_A,
     ];
-
     hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
     hints.set(DecodeHintType.TRY_HARDER, true);
 
@@ -89,11 +67,15 @@ function BarcodeScanner({ onScan, onClose }) {
 
     const startScanner = async () => {
       setError('');
-
       try {
         const videoInputDevices = await codeReader.current.listVideoInputDevices();
+        
+        if (videoInputDevices.length === 0) {
+            setError('هیچ دوربینی در سیستم یافت نشد.');
+            return;
+        }
 
-        const backCamera = videoInputDevices.find(device =>
+        const backCameras = videoInputDevices.filter(device =>
           device.label.toLowerCase().includes('back') ||
           device.label.toLowerCase().includes('rear') ||
           (
@@ -105,22 +87,27 @@ function BarcodeScanner({ onScan, onClose }) {
 
         let selectedCamera = null;
 
-        if(backCameras.length > 0) {
+        if (backCameras.length > 0) {
           selectedCamera = backCameras.find(device =>
             device.label.toLowerCase().includes('camera2 0') ||
             device.label.toLowerCase().includes('camera 0') ||
             device.label.toLowerCase().includes('lens 0')
           );
 
-          if(!selectedCamera) {
+          if (!selectedCamera) {
             const standardCameras = backCameras.filter(device =>
               !device.label.toLowerCase().includes('ultrawide') &&
               !device.label.toLowerCase().includes('ultra') &&
               !device.label.toLowerCase().includes('macro')
             );
-            selectedCamera = standardCameras[0] || backCamera[0];
+            selectedCamera = standardCameras[0] || backCameras[0];
           }
+        } else {
+          // فال‌بک امنیتی: اگر مرورگر نام لنزها را مخفی کرده بود (Empty Labels)
+          // آخرین دوربین لیست را برمی‌داریم که در ۹۹ درصد گوشی‌ها دوربین اصلی پشت است
+          selectedCamera = videoInputDevices[videoInputDevices.length - 1];
         }
+
         if (selectedCamera) {
           const constraints = {
             video: {
@@ -129,7 +116,6 @@ function BarcodeScanner({ onScan, onClose }) {
               width: { ideal: 1280 },
               height: { ideal: 720 },
               frameRate: { ideal: 30 },
-              advanced: [{ focusMode: 'continuous' }] 
             },
           };
 
@@ -140,70 +126,42 @@ function BarcodeScanner({ onScan, onClose }) {
               if (result) {
                 const scannedCode = result.getText();
                 const now = Date.now();
-
-                if (isScanned.current) {
-                  return;
-                }
-
-                if (
-                  scannedCode === lastScannedCode.current &&
-                  now - lastScannedTime.current < 2000
-                ) {
-                  return;
-                }
-
+                if (isScanned.current) return;
+                if (scannedCode === lastScannedCode.current && now - lastScannedTime.current < 2000) return;
+                
                 isScanned.current = true;
                 lastScannedCode.current = scannedCode;
                 lastScannedTime.current = now;
-
-                console.log('Scanned Result (ZXing):', scannedCode);
-
+                console.log('Scanned Result:', scannedCode);
+                
                 playBeep();
                 onScan(scannedCode);
-
                 setTimeout(() => {
-                  if (codeReader.current) {
-                    codeReader.current.reset();
-                  }
+                  if (codeReader.current) codeReader.current.reset();
                   onClose();
                 }, 180);
               }
             }
           );
-
-          setTimeout(() => {
-            applyFocusMode();
-          }, 700);
+          setTimeout(() => applyFocusMode(), 700);
         } else {
-          setError('دوربین مناسب پیدا نشد. لطفا یک دوربین دیگر را انتخاب کنید یا دسترسی را بررسی کنید.');
+          setError('دوربین مناسب پیدا نشد.');
           onClose();
         }
       } catch (e) {
-        console.error('Scanner Initialization Error (ZXing):', e);
-
-        if (e.name === 'NotAllowedError') {
-          setError('اجازه دسترسی به دوربین داده نشد. لطفا دسترسی مرورگر به دوربین را فعال کنید.');
-        } else if (e.name === 'NotFoundError') {
-          setError('دوربینی در دسترس نیست.');
-        } else if (e.name === 'OverconstrainedError') {
-          setError('تنظیمات فوکوس یا کیفیت توسط این دوربین پشتیبانی نمی‌شود.');
-        } else {
-          setError('خطا در دسترسی به دوربین: ' + e.message);
-        }
-
-        onClose();
+        console.error('Scanner Error:', e);
+        if (e.name === 'NotAllowedError') setError('اجازه دسترسی به دوربین داده نشد.');
+        else if (e.name === 'NotFoundError') setError('دوربینی در دسترس نیست.');
+        else setError('خطا در دسترسی به دوربین.');
       }
     };
 
     startScanner();
-
     return () => {
-      if (codeReader.current) {
-        codeReader.current.reset();
-      }
+      if (codeReader.current) codeReader.current.reset();
     };
   }, [onScan, onClose]);
-
+  
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
       <div style={{ position: 'relative', width: '100%', maxWidth: '350px', background: 'white', borderRadius: '8px', padding: '1rem', boxSizing: 'border-box' }}>
