@@ -1,35 +1,25 @@
-# Sensitive
-.env
-*.pem
-*.key
-
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-
-# Virtual environments
 .venv/
 venv/
-backend/venv/
-backend/.venv/
 
 # Node
 node_modules/
-frontend/node_modules/
 
 # Build
 dist/
 build/
-frontend/dist/
-frontend/build/
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Environment
+.env
+*.pem
+*.key
 
 # IDE
 .idea/
@@ -37,8 +27,3 @@ frontend/build/
 
 # Logs
 *.log
-
-# Local generated files
-1.0.txt
-treeofdirectory.txt
-#
